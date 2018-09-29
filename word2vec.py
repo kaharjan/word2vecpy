@@ -34,11 +34,11 @@ class Vocab:
                 if token not in vocab_hash:
                     vocab_hash[token] = len(vocab_items)
                     vocab_items.append(VocabItem(token))
-                    
+
                 #assert vocab_items[vocab_hash[token]].word == token, 'Wrong vocab_hash index'
                 vocab_items[vocab_hash[token]].count += 1
                 word_count += 1
-            
+
                 if word_count % 10000 == 0:
                     sys.stdout.write("\rReading word %d" % word_count)
                     sys.stdout.flush()
@@ -48,6 +48,8 @@ class Vocab:
             vocab_items[vocab_hash['<eol>']].count += 1
             word_count += 2
 
+
+#The method tell() returns the current position of the file read/write pointer within the file.
         self.bytes = fi.tell()
         self.vocab_items = vocab_items         # List of VocabItem objects
         self.vocab_hash = vocab_hash           # Mapping from each token to its index in vocab
@@ -79,7 +81,7 @@ class Vocab:
         tmp = []
         tmp.append(VocabItem('<unk>'))
         unk_hash = 0
-        
+
         count_unk = 0
         for token in self.vocab_items:
             if token.count < min_count:
@@ -110,7 +112,7 @@ class Vocab:
         count = [t.count for t in self] + [1e15] * (vocab_size - 1)
         parent = [0] * (2 * vocab_size - 2)
         binary = [0] * (2 * vocab_size - 2)
-        
+
         pos1 = vocab_size - 1
         pos2 = vocab_size
 
@@ -171,7 +173,8 @@ class UnigramTable:
         power = 0.75
         norm = sum([math.pow(t.count, power) for t in vocab]) # Normalizing constant
 
-        table_size = 1e8 # Length of the unigram table
+        #table_size = 1e8 # Length of the unigram table
+        table_size = np.uint32(1e8)
         table = np.zeros(table_size, dtype=np.uint32)
 
         print 'Filling unigram table'
@@ -199,7 +202,9 @@ def sigmoid(z):
 def init_net(dim, vocab_size):
     # Init syn0 with random numbers from a uniform distribution on the interval [-0.5, 0.5]/dim
     tmp = np.random.uniform(low=-0.5/dim, high=0.5/dim, size=(vocab_size, dim))
+    #Create and return a ctypes object from a numpy array. Actually anything that exposes the __array_interface__ is accepted.
     syn0 = np.ctypeslib.as_ctypes(tmp)
+    #data can be stored in a shared memory map using Value or Array
     syn0 = Array(syn0._type_, syn0, lock=False)
 
     # Init syn1 with zeros
@@ -332,7 +337,7 @@ def save(vocab, syn0, fo, binary):
 def __init_process(*args):
     global vocab, syn0, syn1, table, cbow, neg, dim, starting_alpha
     global win, num_processes, global_word_count, fi
-    
+
     vocab, syn0_tmp, syn1_tmp, table, cbow, neg, dim, starting_alpha, win, num_processes, global_word_count = args[:-1]
     fi = open(args[-1], 'r')
     with warnings.catch_warnings():
@@ -377,7 +382,7 @@ if __name__ == '__main__':
     parser.add_argument('-negative', help='Number of negative examples (>0) for negative sampling, 0 for hierarchical softmax', dest='neg', default=5, type=int)
     parser.add_argument('-dim', help='Dimensionality of word embeddings', dest='dim', default=100, type=int)
     parser.add_argument('-alpha', help='Starting alpha', dest='alpha', default=0.025, type=float)
-    parser.add_argument('-window', help='Max window length', dest='win', default=5, type=int) 
+    parser.add_argument('-window', help='Max window length', dest='win', default=5, type=int)
     parser.add_argument('-min-count', help='Min count for words used to learn <unk>', dest='min_count', default=5, type=int)
     parser.add_argument('-processes', help='Number of processes', dest='num_processes', default=1, type=int)
     parser.add_argument('-binary', help='1 for output model in binary format, 0 otherwise', dest='binary', default=0, type=int)
