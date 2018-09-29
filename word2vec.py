@@ -146,7 +146,18 @@ class Vocab:
             parent[min2] = vocab_size + i
             binary[min2] = 1
 
+
         # Assign binary code and path pointers to each vocab word
+        print("binary:")
+        for item in binary:
+            print(item,)
+        print("parent:")
+        for item in parent:
+            print(item,)
+        print("count:")
+        for item in count:
+            print(count,)
+
         root_idx = 2 * vocab_size - 2
         for i, token in enumerate(self):
             path = [] # List of indices from the leaf to the root
